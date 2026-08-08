@@ -3,9 +3,9 @@
 
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcryptjs';
-import User from "../models/User";
+import User from "../models/User.js";
 
-export const protectRoute = (req,res,next) => {
+export const protectRoute = async (req,res,next) => {
 
     const token = req.headers.token; //expecting token in header from client
 
@@ -16,7 +16,7 @@ export const protectRoute = (req,res,next) => {
     // iat: ...,
     // exp: ... }
 
-    const user = await User.findById(decoded.userId).select("-password") // get everything except password
+    const user = await User.findById(decoded.user_id).select("-password") // get everything except password
 
     if(!user) res.json({success : false, message : "User Not Found!"});
 

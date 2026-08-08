@@ -13,7 +13,7 @@ export const signUp = async (req,res) => {
             return res.json({success : false, message : "Missing Details"});
         }
 
-        const user = await User.findOne({email});
+        const user = await User.findOne({email}).select("-password");
 
         if(user){
             return res.json({success : false, message : "Account Already Exists!"})
@@ -50,7 +50,7 @@ export const login = async (req,res) => {
         }
 
         //for correct credentials
-        const token = generateToken(newUser._id);
+        const token = generateToken(userData._id);
         res.json({success : true, userData, token, message : "Login Successful"});
 
     } catch (error) {

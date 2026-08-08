@@ -16,6 +16,8 @@ app.use(cors());
 app.use("/api/status", (req,res) => (
     res.send("Server is Live!")
 ))
+
+//userRouter is mounted as middleware on /api/auth.
 app.use("/api/auth", userRouter)
 
 //connect Database
