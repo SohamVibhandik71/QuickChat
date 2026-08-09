@@ -41,7 +41,7 @@ export const getMessages = async (req,res) => {
             ]
         })
 
-        await Message.updateMany({senderId : selectedUserId, receiverId : myId, seen : true})
+        await Message.updateMany({senderId : selectedUserId, receiverId : myId, seen : true},{seen : true})
 
         res.json({success : true, messages})
 
@@ -68,8 +68,8 @@ export const markMessageAsSeen = async (req, res) => {
 export const sendMessage = async (req,res) => {
     try{
         const { text, image } = req.body;
-        const { receiverId } = req.params.id;
-        const { senderId } = req.user._id;
+        const  receiverId  = req.params.id;
+        const  senderId  = req.user._id;
 
         let imageUrl;
         if(image){
