@@ -5,65 +5,75 @@ import http from "http";
 import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
-import { Server } from 'socket.io'
+import { Server } from "socket.io";
 
-
-//create express app and http server
+// Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 
-//Initialize Socket.io server
+// Initialize Socket.IO
 export const io = new Server(server, {
-    cors : {origin: "*"}
-})
+    cors: {
+        origin: "*"
+    }
+});
 
-//store Online users 
-export const userSocketMap = {} // {userId : socketId}
+// Store online users
+export const userSocketMap = {};
 
-//Socket.io connection event
+// Socket.IO connection event
 io.on("connection", (socket) => {
 
     const userId = socket.handshake.query.userId;
 
-    console.log("user connected.", userId);
+    console.log("User connected:", userId);
 
-    if(userId) userSocketMap[userId] = socket.id;
+    if (userId) {
+        userSocketMap[userId] = socket.id;
+    }
 
-    //Emit online users to all connected clients
+    // Send online users to all connected clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-    socket.on("disconnect",()=>{
-        console.log("User Disconnected", userId);
-        delete userSocketMap[userId];
-        io.emit("getOnlineUsers",Object.keys(userSocketMap))
-    })
-    
-})
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", userId);
 
+        if (userId) {
+            delete userSocketMap[userId];
+        }
 
-//middleware setup
-app.use(express.json({"limit" : "4mb"}));
+        io.emit(
+            "getOnlineUsers",
+            Object.keys(userSocketMap)
+        );
+    });
+});
+
+// Middleware
+app.use(express.json({ limit: "4mb" }));
+
 app.use(cors());
 
-app.use("/api/status", (req,res) => (
-    res.send("Server is Live!")
-))
+// Status route
+app.use("/api/status", (req, res) => {
+    res.send("Server is Live!");
+});
 
-//userRouter is mounted as middleware on /api/auth.
-app.use("/api/auth", userRouter)
+// Routes
+app.use("/api/auth", userRouter);
 
-//messageRouter is mounted as middleware on /api/messages.
 app.use("/api/messages", messageRouter);
 
-//connect Database
+// Connect database
 await connectDB();
 
 const PORT = process.env.PORT || 5000;
 
-if(process.env.NODE_ENV !== "production"){
-    server.listen(PORT,()=>{
-        console.log(`Server is Running on Port ${PORT}`)
+// Local development only
+if (process.env.NODE_ENV !== "production") {
+    server.listen(PORT, () => {
+        console.log(`Server is Running on Port ${PORT}`);
     });
 }
-//export server for vercel
-export default app;
+
+export default server;
