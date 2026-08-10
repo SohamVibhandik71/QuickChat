@@ -1,5 +1,9 @@
 export function formatMessageTime(date){
-    return new Date(date).toLocaleTimeString("en-US",{
+    const messageDate = new Date(date);
+
+    if(Number.isNaN(messageDate.getTime())) return "";
+
+    return messageDate.toLocaleTimeString("en-US",{
         hour : "2-digit",
         minute : "2-digit",
         hour12 : false
