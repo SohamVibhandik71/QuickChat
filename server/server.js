@@ -7,42 +7,41 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 
-// Create Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Socket.IO
 export const io = new Server(server, {
     cors: {
         origin: "*"
     }
 });
 
-// Store online users
+// Online users
 export const userSocketMap = {};
 
-// Socket.IO connection event
 io.on("connection", (socket) => {
+
     const userId = socket.handshake.query.userId;
 
-    console.log("SOCKET CONNECTED");
-    console.log("USER ID:", userId);
-    console.log("SOCKET ID:", socket.id);
+    console.log("User connected:", userId);
 
     if (userId) {
         userSocketMap[userId] = socket.id;
     }
 
-    console.log("ONLINE USERS:", userSocketMap);
-
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    io.emit(
+        "getOnlineUsers",
+        Object.keys(userSocketMap)
+    );
 
     socket.on("disconnect", () => {
-        console.log("SOCKET DISCONNECTED:", userId);
 
-        delete userSocketMap[userId];
+        console.log("User disconnected:", userId);
 
-        console.log("ONLINE USERS:", userSocketMap);
+        if (userId) {
+            delete userSocketMap[userId];
+        }
 
         io.emit(
             "getOnlineUsers",
@@ -56,26 +55,21 @@ app.use(express.json({ limit: "4mb" }));
 
 app.use(cors());
 
-// Status route
+// Status
 app.use("/api/status", (req, res) => {
     res.send("Server is Live!");
 });
 
 // Routes
 app.use("/api/auth", userRouter);
-
 app.use("/api/messages", messageRouter);
 
-// Connect database
+// Database
 await connectDB();
 
+// Start server
 const PORT = process.env.PORT || 5000;
 
-// Local development only
-if (process.env.NODE_ENV !== "production") {
-    server.listen(PORT, () => {
-        console.log(`Server is Running on Port ${PORT}`);
-    });
-}
-
-export default server;
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is Running on Port ${PORT}`);
+});
